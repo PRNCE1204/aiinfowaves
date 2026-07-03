@@ -9,7 +9,12 @@
 const { Resend } = require('resend');
 
 // Initialise Resend client with your API key from .env
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend;
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+} else {
+  console.warn('⚠️ RESEND_API_KEY is not defined in the backend environment variables. Email sending is disabled.');
+}
 
 // Who emails are sent FROM (set in .env)
 const FROM = process.env.RESEND_FROM || 'AI InfoWave <hrmanager@aiinfowave.com>';
@@ -19,6 +24,10 @@ const FROM = process.env.RESEND_FROM || 'AI InfoWave <hrmanager@aiinfowave.com>'
 // ─────────────────────────────────────────────────────────────
 const sendMail = async ({ to, subject, html }) => {
   try {
+    if (!resend) {
+      console.warn(`⚠️ Email send skipped (Resend client offline) | To: ${to} | Subject: ${subject}`);
+      return;
+    }
     const { data, error } = await resend.emails.send({ from: FROM, to, subject, html });
     if (error) {
       console.error('❌ Resend error:', error);
@@ -29,6 +38,7 @@ const sendMail = async ({ to, subject, html }) => {
     console.error('❌ emailService crash:', err.message);
   }
 };
+
 
 // ─────────────────────────────────────────────────────────────
 // 1. OTP VERIFICATION EMAIL  (sent after registration)
