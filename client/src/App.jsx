@@ -6,8 +6,7 @@ import RegisterPage from './pages/RegisterPage/RegisterPage'
 import VerifyEmailPage from './pages/VerifyEmailPage/VerifyEmailPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage'
 import GoogleCallbackPage from './pages/GoogleCallbackPage/GoogleCallbackPage'
-import NgsPage from './pages/NgsPage/NgsPage'
-import ProteomicsPage from './pages/ProteomicsPage/ProteomicsPage'
+
 import ContactPage from './pages/ContactPage/ContactPage'
 import CareerPage from './pages/CareerPage/CareerPage'
 import ServicesPage from './pages/ServicesPage/ServicesPage'
@@ -33,8 +32,7 @@ export default function App() {
           <Route path="forgot-password" element={<ForgotPasswordPage />} />
           {/* Google OAuth callback — no Layout wrapper needed */}
           <Route path="auth/google/callback" element={<GoogleCallbackPage />} />
-          <Route path="ngs" element={<NgsPage />} />
-          <Route path="proteomics" element={<ProteomicsPage />} />
+
           <Route path="contact" element={<ContactPage />} />
           <Route path="career" element={<CareerPage />} />
           <Route path="services" element={<ServicesPage />} />
