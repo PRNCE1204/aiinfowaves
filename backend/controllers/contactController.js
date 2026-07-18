@@ -35,4 +35,15 @@ const submitContactMessage = async (req, res) => {
   }
 };
 
-module.exports = { submitContactMessage };
+const getAllContactMessages = async (req, res) => {
+  try {
+    const messages = await ContactMessage.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, messages });
+  } catch (error) {
+    console.error('Error fetching contact messages:', error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+};
+
+module.exports = { submitContactMessage, getAllContactMessages };
+

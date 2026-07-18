@@ -126,6 +126,7 @@ const jobRoutes = require('./routes/jobs');
 const bookingRoutes = require('./routes/booking');
 const projectCallRoutes = require('./routes/projectCall');
 const chatRoutes = require('./routes/chat');
+const adminRoutes = require('./routes/admin');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/contact', contactRoutes);
@@ -134,6 +135,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/project-call', projectCallRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/admin', adminRoutes);
 
 
 
