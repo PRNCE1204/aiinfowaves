@@ -127,6 +127,7 @@ const bookingRoutes = require('./routes/booking');
 const projectCallRoutes = require('./routes/projectCall');
 const chatRoutes = require('./routes/chat');
 const adminRoutes = require('./routes/admin');
+const bcrypt = require('bcryptjs');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/contact', contactRoutes);
@@ -143,7 +144,32 @@ app.use('/api/admin', adminRoutes);
 if (process.env.MONGO_URI) {
   mongoose
     .connect(process.env.MONGO_URI)
-    .then(() => console.log('✅ Connected to MongoDB Atlas (ai-infowave)'))
+    .then(async () => {
+      console.log('✅ Connected to MongoDB Atlas (ai-infowave)');
+      try {
+        const email = process.env.ADMIN_EMAIL;
+        const password = process.env.ADMIN_PASSWORD;
+        if (email) {
+          const existing = await User.findOne({ email: email.toLowerCase() });
+          if (!existing) {
+            const passwordHash = password ? await bcrypt.hash(password, 12) : null;
+            await User.create({
+              name: 'Admin',
+              email: email.toLowerCase(),
+              password: passwordHash,
+              isEmailVerified: true,
+              authProvider: 'local',
+            });
+            console.log(`✅ Admin user seeded in User collection: ${email}`);
+          } else {
+            console.log('✅ Admin user already exists in User collection.');
+          }
+        }
+      } catch (err) {
+        console.error('❌ Error seeding admin user:', err.message);
+      }
+    })
+
     .catch((err) => {
       console.error('❌ MongoDB connection error:', err.message);
     });

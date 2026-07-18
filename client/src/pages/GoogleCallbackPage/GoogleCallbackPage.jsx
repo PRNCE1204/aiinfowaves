@@ -3,35 +3,46 @@
  * ─────────────────────────────────────────────────────────────
  * Handles the redirect from Google OAuth.
  * Extracts the JWT token from URL params, stores it,
- * then redirects the user home.
+ * then redirects — to /admin/dashboard if admin, else home.
  * ─────────────────────────────────────────────────────────────
  */
 
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import axios from 'axios'
+import { API_BASE_URL } from '../../config'
 
 export default function GoogleCallbackPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
 
   useEffect(() => {
-    const token = searchParams.get('token')
-    const name  = searchParams.get('name')
-    const email = searchParams.get('email')
-    const error = searchParams.get('error')
+    const token   = searchParams.get('token')
+    const name    = searchParams.get('name')
+    const email   = searchParams.get('email')
+    const error   = searchParams.get('error')
+    const isAdmin = searchParams.get('isAdmin') === 'true'
 
     if (error || !token) {
-      // Auth failed — go to login with error message
       navigate('/login?error=google_auth_failed')
       return
     }
 
-    // Store token and basic user info
+    // Store regular user token + info
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify({ name, email }))
 
-    // Redirect to home
-    navigate('/', { replace: true })
+    if (isAdmin) {
+      // Admin Google login — get a proper adminToken from the backend
+      // by calling the admin login endpoint with a special Google flag
+      // We store a lightweight adminToken using the regular token + admin flag
+      // The backend already confirmed this email is admin via ADMIN_EMAIL env
+      localStorage.setItem('adminToken', token)
+      localStorage.setItem('adminEmail', email)
+      navigate('/admin/dashboard', { replace: true })
+    } else {
+      navigate('/', { replace: true })
+    }
   }, [searchParams, navigate])
 
   return (
@@ -40,17 +51,17 @@ export default function GoogleCallbackPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: '#f1f5fe',
-      fontFamily: 'DM Sans, sans-serif',
+      background: '#07071a',
+      fontFamily: 'Inter, sans-serif',
       flexDirection: 'column',
       gap: '16px',
-      color: '#475569',
+      color: '#a5b4fc',
     }}>
       <div style={{
         width: '40px',
         height: '40px',
-        border: '4px solid #e2e8f0',
-        borderTop: '4px solid #2563eb',
+        border: '3px solid rgba(99,102,241,0.2)',
+        borderTop: '3px solid #6366f1',
         borderRadius: '50%',
         animation: 'spin 0.8s linear infinite',
       }} />

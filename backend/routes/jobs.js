@@ -21,9 +21,11 @@ const multerErrorHandler = (req, res, next) => {
 // Public Route — submit a job application
 router.post('/apply', multerErrorHandler, applyJob);
 
+const { requireAdmin } = require('../middleware/adminMiddleware');
+
 // Admin Routes
-router.get('/', getAllJobApplications);
-router.get('/stats', getJobStats);
-router.put('/:id/status', updateJobApplicationStatus);
+router.get('/', requireAdmin, getAllJobApplications);
+router.get('/stats', requireAdmin, getJobStats);
+router.put('/:id/status', requireAdmin, updateJobApplicationStatus);
 
 module.exports = router;

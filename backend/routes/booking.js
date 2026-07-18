@@ -8,7 +8,7 @@
 const express = require('express');
 const router = express.Router();
 const { createBooking, getBookedSlots, getAllBookings } = require('../controllers/bookingController');
-
+const { requireAdmin } = require('../middleware/adminMiddleware');
 
 // POST /api/bookings/create - Create a consultation booking
 router.post('/create', createBooking);
@@ -17,7 +17,7 @@ router.post('/create', createBooking);
 router.get('/booked-slots', getBookedSlots);
 
 // GET /api/bookings - Admin: all bookings
-router.get('/', getAllBookings);
+router.get('/', requireAdmin, getAllBookings);
 
 
 module.exports = router;

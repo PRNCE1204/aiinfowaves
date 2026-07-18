@@ -16,6 +16,7 @@ import InternshipAdminPage from './pages/AdminDashboard/InternshipAdminPage'
 import BookingPage from './pages/BookingPage/BookingPage'
 import ScrollToTop from './components/ScrollToTop'
 import SessionGuard from './components/SessionGuard'
+import AdminGuard from './components/AdminGuard'
 
 export default function App() {
   return (
@@ -39,7 +40,7 @@ export default function App() {
           <Route path="open-project-call" element={<OpenProjectCallPage />} />
           <Route path="internship" element={<InternshipPage />} />
           <Route path="book" element={<BookingPage />} />
-          <Route path="admin/dashboard" element={<InternshipAdminPage />} />
+          <Route path="admin/dashboard" element={<AdminGuard><InternshipAdminPage /></AdminGuard>} />
         </Route>
       </Routes>
     </>

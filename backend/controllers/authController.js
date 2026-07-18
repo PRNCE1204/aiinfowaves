@@ -473,14 +473,15 @@ exports.resetPassword = async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 exports.googleCallback = async (req, res) => {
   try {
-    // req.user is set by Passport's verify callback (see server.js)
     const user = req.user;
     const token = signToken(user._id);
 
-    // Redirect to frontend with token in URL query param
-    // The frontend will extract it and store in localStorage
+    // Check if this Google account belongs to the admin
+    const isAdmin = user.email.toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase();
+
+    // Redirect to frontend with token + isAdmin flag
     res.redirect(
-      `${process.env.CLIENT_URL}/auth/google/callback?token=${token}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}`
+      `${process.env.CLIENT_URL}/auth/google/callback?token=${token}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}&isAdmin=${isAdmin}`
     );
   } catch (error) {
     console.error('Google callback error:', error);

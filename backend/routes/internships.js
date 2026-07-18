@@ -26,9 +26,11 @@ router.post('/apply', (req, res, next) => {
   });
 }, applyInternship);
 
+const { requireAdmin } = require('../middleware/adminMiddleware');
+
 // Admin Routes
-router.get('/', getAllApplications);
-router.get('/stats', getDashboardStats);
-router.put('/:id/status', updateApplicationStatus);
+router.get('/', requireAdmin, getAllApplications);
+router.get('/stats', requireAdmin, getDashboardStats);
+router.put('/:id/status', requireAdmin, updateApplicationStatus);
 
 module.exports = router;

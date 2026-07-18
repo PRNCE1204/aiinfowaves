@@ -20,6 +20,18 @@ const API = {
   contact:      `${API_BASE_URL}/api/contact`,
 };
 
+// ── Interceptor to automatically attach authorization header ──────────────
+axios.interceptors.request.use((config) => {
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
+
 // ── Helpers ─────────────────────────────────────────────────────────────────
 const fmtDate = (d) => {
   if (!d) return '—';
