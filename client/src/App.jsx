@@ -39,7 +39,7 @@ export default function App() {
           <Route path="open-project-call" element={<OpenProjectCallPage />} />
           <Route path="internship" element={<InternshipPage />} />
           <Route path="book" element={<BookingPage />} />
-          <Route path="admin/internships" element={<InternshipAdminPage />} />
+          <Route path="admin/dashboard" element={<InternshipAdminPage />} />
         </Route>
       </Routes>
     </>
