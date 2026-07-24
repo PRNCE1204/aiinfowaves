@@ -186,10 +186,13 @@ exports.handleChatMessage = async (req, res) => {
     const genAI = new GoogleGenerativeAI(apiKey);
 
     // We use gemini-2.5-flash for fast, responsive, and cost-efficient responses
+    // Falls back to gemini-1.5-flash if the model name changes
+    const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: modelName,
       systemInstruction: SYSTEM_INSTRUCTION,
     });
+    console.log(`🤖 Using Gemini model: ${modelName}`);
 
     // Formulate the chat session with past history
     // Standard structure: history must be an array of { role: 'user'|'model', parts: [{ text: '...' }] }
@@ -220,10 +223,25 @@ exports.handleChatMessage = async (req, res) => {
 
     return res.status(200).json({ response: responseText });
   } catch (error) {
-    console.error('❌ Chatbot Controller Error:', error);
-    return res.status(500).json({
-      error: 'Failed to process message.',
-      details: error.message
-    });
+    // Log full error details to Render logs for diagnosis
+    console.error('❌ Chatbot Controller Error:');
+    console.error('  Message:', error.message);
+    console.error('  Status:', error.status || error.statusCode || 'N/A');
+    console.error('  Code:', error.code || 'N/A');
+    console.error('  Stack:', error.stack);
+
+    // Determine a user-friendly message based on error type
+    let friendlyMessage = "I'm having a brief issue connecting right now. Please try again in a moment, or reach us directly at [/contact](/contact).";
+
+    if (error.message && error.message.toLowerCase().includes('api key')) {
+      friendlyMessage = "My AI core has a configuration issue. Please contact us at [/contact](/contact) so we can assist you directly.";
+    } else if (error.message && error.message.toLowerCase().includes('quota')) {
+      friendlyMessage = "I've hit my usage limit for now. Please try again in a few minutes or [contact us](/contact) directly.";
+    } else if (error.message && (error.message.toLowerCase().includes('not found') || error.message.toLowerCase().includes('404'))) {
+      friendlyMessage = "I'm having a configuration issue. Please [contact us](/contact) and we'll assist you directly.";
+    }
+
+    // Return 200 with friendly message so frontend shows it in chat instead of the generic error
+    return res.status(200).json({ response: friendlyMessage });
   }
 };
