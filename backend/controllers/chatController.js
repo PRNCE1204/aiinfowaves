@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 
 // Personalized system instructions detailing AI InfoWave's services and pathways.
 const SYSTEM_INSTRUCTION = `
@@ -178,24 +178,18 @@ exports.handleChatMessage = async (req, res) => {
     if (!apiKey) {
       console.warn('⚠️ GEMINI_API_KEY is not defined in the backend environment variables.');
       return res.status(200).json({
-        response: "I'm sorry, but my AI core is currently offline (API key is missing in the server configuration). Please contact the administrator or try using our contact form at /contact!"
+        response: "I'm sorry, but my AI core is currently offline (API key is missing in the server configuration). Please contact the administrator or try using our contact form at [/contact](/contact)."
       });
     }
 
-    // Initialize the Gemini API client
-    const genAI = new GoogleGenerativeAI(apiKey);
+    // Initialize the new @google/genai client
+    const ai = new GoogleGenAI({ apiKey });
 
-    // We use gemini-2.5-flash for fast, responsive, and cost-efficient responses
-    // Falls back to gemini-1.5-flash if the model name changes
     const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      systemInstruction: SYSTEM_INSTRUCTION,
-    });
     console.log(`🤖 Using Gemini model: ${modelName}`);
 
-    // Formulate the chat session with past history
-    // Standard structure: history must be an array of { role: 'user'|'model', parts: [{ text: '...' }] }
+    // Format conversation history for the new SDK
+    // New SDK: history items use { role: 'user'|'model', parts: [{ text }] }
     let formattedHistory = [];
     if (Array.isArray(history)) {
       formattedHistory = history.map(item => ({
@@ -203,23 +197,22 @@ exports.handleChatMessage = async (req, res) => {
         parts: [{ text: item.content || item.text || '' }]
       }));
 
-      // Google Gen AI SDK requires history to start with a 'user' message.
-      // If the first message is 'model' (welcome message), skip it until we hit the first 'user' message.
+      // SDK requires history to start with a 'user' message — skip leading model messages
       const firstUserIndex = formattedHistory.findIndex(item => item.role === 'user');
-      if (firstUserIndex !== -1) {
-        formattedHistory = formattedHistory.slice(firstUserIndex);
-      } else {
-        formattedHistory = [];
-      }
+      formattedHistory = firstUserIndex !== -1 ? formattedHistory.slice(firstUserIndex) : [];
     }
 
-    const chat = model.startChat({
+    // Create a chat session using the new @google/genai SDK
+    const chat = ai.chats.create({
+      model: modelName,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+      },
       history: formattedHistory,
     });
 
-
-    const result = await chat.sendMessage(message);
-    const responseText = result.response.text();
+    const result = await chat.sendMessage({ message });
+    const responseText = result.text;
 
     return res.status(200).json({ response: responseText });
   } catch (error) {
@@ -238,10 +231,10 @@ exports.handleChatMessage = async (req, res) => {
     } else if (error.message && error.message.toLowerCase().includes('quota')) {
       friendlyMessage = "I've hit my usage limit for now. Please try again in a few minutes or [contact us](/contact) directly.";
     } else if (error.message && (error.message.toLowerCase().includes('not found') || error.message.toLowerCase().includes('404'))) {
-      friendlyMessage = "I'm having a configuration issue. Please [contact us](/contact) and we'll assist you directly.";
+      friendlyMessage = "I'm having a model configuration issue. Please [contact us](/contact) and we'll assist you directly.";
     }
 
-    // Return 200 with friendly message so frontend shows it in chat instead of the generic error
+    // Return 200 with friendly message so frontend shows it in chat instead of a generic error
     return res.status(200).json({ response: friendlyMessage });
   }
 };
