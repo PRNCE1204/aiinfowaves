@@ -1,4 +1,4 @@
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Personalized system instructions detailing AI InfoWave's services and pathways.
 const SYSTEM_INSTRUCTION = `
@@ -182,14 +182,19 @@ exports.handleChatMessage = async (req, res) => {
       });
     }
 
-    // Initialize the new @google/genai client
-    const ai = new GoogleGenAI({ apiKey });
+    // Initialize the Gemini API client
+    const genAI = new GoogleGenerativeAI(apiKey);
 
     const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     console.log(`🤖 Using Gemini model: ${modelName}`);
 
-    // Format conversation history for the new SDK
-    // New SDK: history items use { role: 'user'|'model', parts: [{ text }] }
+    const model = genAI.getGenerativeModel({
+      model: modelName,
+      systemInstruction: SYSTEM_INSTRUCTION,
+    });
+
+    // Format conversation history
+    // History must be an array of { role: 'user'|'model', parts: [{ text }] }
     let formattedHistory = [];
     if (Array.isArray(history)) {
       formattedHistory = history.map(item => ({
@@ -202,17 +207,9 @@ exports.handleChatMessage = async (req, res) => {
       formattedHistory = firstUserIndex !== -1 ? formattedHistory.slice(firstUserIndex) : [];
     }
 
-    // Create a chat session using the new @google/genai SDK
-    const chat = ai.chats.create({
-      model: modelName,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-      },
-      history: formattedHistory,
-    });
-
-    const result = await chat.sendMessage({ message });
-    const responseText = result.text;
+    const chat = model.startChat({ history: formattedHistory });
+    const result = await chat.sendMessage(message);
+    const responseText = result.response.text();
 
     return res.status(200).json({ response: responseText });
   } catch (error) {
