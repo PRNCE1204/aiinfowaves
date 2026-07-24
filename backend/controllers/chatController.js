@@ -182,10 +182,11 @@ exports.handleChatMessage = async (req, res) => {
       });
     }
 
-    // Initialize the Gemini API client
-    const genAI = new GoogleGenerativeAI(apiKey);
+    // Initialize the Gemini API client (v0.24.x requires object syntax)
+    const genAI = new GoogleGenerativeAI({ apiKey });
 
-    const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+    // gemini-1.5-flash works on all API key tiers (free + paid)
+    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
     console.log(`🤖 Using Gemini model: ${modelName}`);
 
     const model = genAI.getGenerativeModel({
