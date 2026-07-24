@@ -10,7 +10,7 @@ const SUGGESTIONS = [
   'What services do you offer?',
   'Tell me about internships',
   'How do I book a consultation?',
-  'Who is Wavey?'
+  'View career openings'
 ];
 
 
@@ -20,7 +20,7 @@ export default function ChatbotWidget() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: `Hi there! 👋 I am **Wavey**, your AI assistant for AI InfoWave.
+      content: `Hi there! 👋 I am **AI Infowave**, your intelligent AI assistant.
 
 Here is what I can help you with:
 - Explain our **Bio & Health AI** or **Agriculture AI** solutions
@@ -129,7 +129,7 @@ How can I help you today?`
                   <Bot size={18} />
                 </div>
                 <div className={s.botTitle}>
-                  <span>Wavey</span>
+                  <span>AI Infowave</span>
                   <span className={s.botStatus}>
                     <span className={s.statusDot}></span>
                     AI Online
@@ -222,7 +222,7 @@ How can I help you today?`
               <input
                 type="text"
                 className={s.inputField}
-                placeholder="Ask Wavey a question..."
+                placeholder="Ask AI Infowave a question..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
