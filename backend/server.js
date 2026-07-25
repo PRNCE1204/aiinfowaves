@@ -1,4 +1,8 @@
 require('dotenv').config();
+// ── Startup Debug (remove after confirming env vars on Render) ──
+console.log('🔍 ENV CHECK → GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? `SET (starts with: ${process.env.GEMINI_API_KEY.substring(0, 8)}...)` : '❌ NOT SET');
+console.log('🔍 ENV CHECK → GEMINI_MODEL:', process.env.GEMINI_MODEL || 'not set (will use default)');
+// ───────────────────────────────────────────────────────────────
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
