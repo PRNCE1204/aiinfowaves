@@ -1,7 +1,8 @@
 require('dotenv').config();
 // ── Startup Debug (remove after confirming env vars on Render) ──
+console.log('🔍 ENV CHECK → GROQ_API_KEY:', process.env.GROQ_API_KEY ? `SET (starts with: ${process.env.GROQ_API_KEY.substring(0, 8)}...)` : '❌ NOT SET');
+console.log('🔍 ENV CHECK → GROQ_MODEL:', process.env.GROQ_MODEL || 'not set (will use default: llama-3.3-70b-versatile)');
 console.log('🔍 ENV CHECK → GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? `SET (starts with: ${process.env.GEMINI_API_KEY.substring(0, 8)}...)` : '❌ NOT SET');
-console.log('🔍 ENV CHECK → GEMINI_MODEL:', process.env.GEMINI_MODEL || 'not set (will use default)');
 // ───────────────────────────────────────────────────────────────
 const express = require('express');
 const mongoose = require('mongoose');

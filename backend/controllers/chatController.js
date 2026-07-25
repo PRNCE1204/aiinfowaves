@@ -1,4 +1,5 @@
 const { GoogleGenAI } = require('@google/genai');
+const Groq = require('groq-sdk');
 
 // Personalized system instructions detailing AI InfoWave's services and pathways.
 const SYSTEM_INSTRUCTION = `
@@ -175,42 +176,73 @@ exports.handleChatMessage = async (req, res) => {
       return res.status(400).json({ error: 'Message content is required.' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.warn('⚠️ GEMINI_API_KEY is not defined in the backend environment variables.');
+    const groqApiKey = process.env.GROQ_API_KEY;
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+
+    if (groqApiKey) {
+      // 🚀 Use Groq (Default)
+      const groq = new Groq({ apiKey: groqApiKey });
+      const modelName = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+      console.log(`🤖 Using Groq model: ${modelName}`);
+
+      // Format conversation history for Groq
+      const messages = [
+        { role: 'system', content: SYSTEM_INSTRUCTION }
+      ];
+
+      if (Array.isArray(history)) {
+        history.forEach(item => {
+          messages.push({
+            role: item.role === 'assistant' ? 'assistant' : 'user',
+            content: item.content || item.text || ''
+          });
+        });
+      }
+
+      messages.push({ role: 'user', content: message });
+
+      const completion = await groq.chat.completions.create({
+        model: modelName,
+        messages: messages,
+      });
+
+      const responseText = completion.choices[0]?.message?.content || "";
+      return res.status(200).json({ response: responseText });
+    } else if (geminiApiKey) {
+      // 🤖 Fallback to Gemini if Groq is not configured
+      const genAI = new GoogleGenAI({ apiKey: geminiApiKey });
+      const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+      console.log(`🤖 Using Gemini fallback model: ${modelName}`);
+
+      // Format conversation history for the new SDK
+      let formattedHistory = [];
+      if (Array.isArray(history)) {
+        formattedHistory = history.map(item => ({
+          role: item.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: item.content || item.text || '' }]
+        }));
+
+        // SDK requires history to start with a 'user' message — skip leading model messages
+        const firstUserIndex = formattedHistory.findIndex(item => item.role === 'user');
+        formattedHistory = firstUserIndex !== -1 ? formattedHistory.slice(firstUserIndex) : [];
+      }
+
+      const chat = genAI.chats.create({
+        model: modelName,
+        config: { systemInstruction: SYSTEM_INSTRUCTION },
+        history: formattedHistory,
+      });
+
+      const result = await chat.sendMessage({ message });
+      const responseText = result.text;
+
+      return res.status(200).json({ response: responseText });
+    } else {
+      console.warn('⚠️ Neither GROQ_API_KEY nor GEMINI_API_KEY is defined in the backend environment variables.');
       return res.status(200).json({
         response: "I'm sorry, but my AI core is currently offline (API key is missing in the server configuration). Please contact the administrator or try using our contact form at [/contact](/contact)."
       });
     }
-
-    // Initialize the new @google/genai SDK (supports AQ.Ab8R... key format)
-    const genAI = new GoogleGenAI({ apiKey });
-    const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-    console.log(`🤖 Using Gemini model: ${modelName}`);
-
-    // Format conversation history for the new SDK
-    let formattedHistory = [];
-    if (Array.isArray(history)) {
-      formattedHistory = history.map(item => ({
-        role: item.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: item.content || item.text || '' }]
-      }));
-
-      // SDK requires history to start with a 'user' message — skip leading model messages
-      const firstUserIndex = formattedHistory.findIndex(item => item.role === 'user');
-      formattedHistory = firstUserIndex !== -1 ? formattedHistory.slice(firstUserIndex) : [];
-    }
-
-    const chat = genAI.chats.create({
-      model: modelName,
-      config: { systemInstruction: SYSTEM_INSTRUCTION },
-      history: formattedHistory,
-    });
-
-    const result = await chat.sendMessage({ message });
-    const responseText = result.text;
-
-    return res.status(200).json({ response: responseText });
   } catch (error) {
     // Log full error details to Render logs for diagnosis
     console.error('❌ Chatbot Controller Error:');
