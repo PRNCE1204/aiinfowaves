@@ -87,7 +87,7 @@ How can I help you today?`
         ...prev,
         { 
           role: 'assistant', 
-          content: "Oops! An error occurred. Please verify your connection or visit our booking page at [/book](/book) to speak with a human agent." 
+          content: "Oops! An error occurred. Please verify your connection or [contact us](/contact) and we'll assist you directly." 
         }
       ]);
     } finally {
