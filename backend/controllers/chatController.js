@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 
 // Personalized system instructions detailing AI InfoWave's services and pathways.
 const SYSTEM_INSTRUCTION = `
@@ -166,6 +166,7 @@ python function", "explain how CRISPR works", "recommend a book")
 - Standard good-assistant judgment still applies in Mode 2: don't help with anything harmful, illegal, or
   unsafe, regardless of topic.
 `;
+
 exports.handleChatMessage = async (req, res) => {
   try {
     const { message, history } = req.body;
@@ -182,20 +183,12 @@ exports.handleChatMessage = async (req, res) => {
       });
     }
 
-    // Initialize the Gemini API client (v0.24.x requires object syntax)
-    const genAI = new GoogleGenerativeAI({ apiKey });
-
-    // gemini-1.5-flash works on all API key tiers (free + paid)
-    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    // Initialize the new @google/genai SDK (supports AQ.Ab8R... key format)
+    const genAI = new GoogleGenAI({ apiKey });
+    const modelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
     console.log(`🤖 Using Gemini model: ${modelName}`);
 
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      systemInstruction: SYSTEM_INSTRUCTION,
-    });
-
-    // Format conversation history
-    // History must be an array of { role: 'user'|'model', parts: [{ text }] }
+    // Format conversation history for the new SDK
     let formattedHistory = [];
     if (Array.isArray(history)) {
       formattedHistory = history.map(item => ({
@@ -208,9 +201,14 @@ exports.handleChatMessage = async (req, res) => {
       formattedHistory = firstUserIndex !== -1 ? formattedHistory.slice(firstUserIndex) : [];
     }
 
-    const chat = model.startChat({ history: formattedHistory });
-    const result = await chat.sendMessage(message);
-    const responseText = result.response.text();
+    const chat = genAI.chats.create({
+      model: modelName,
+      config: { systemInstruction: SYSTEM_INSTRUCTION },
+      history: formattedHistory,
+    });
+
+    const result = await chat.sendMessage({ message });
+    const responseText = result.text;
 
     return res.status(200).json({ response: responseText });
   } catch (error) {
